@@ -10,7 +10,7 @@ from ml import *
 # https://www.youtube.com/watch?v=R_m4kanPy6Q
 
 def print_duals():
-    x1 = Dual(2, 0)
+    x1 = Dual(2, 1) # set nonzero dx for the direction in which to take the derivative
     x2 = Dual(5, 0)
     print(f"{x1}; {x2}")
     v1 = x1.log()
@@ -24,9 +24,9 @@ def print_duals():
 def print_backward_differentiation():
     a = NeuralNetwork()
     a.add_layer(LayerType.Input, 2)
-    a.add_layer(LayerType.FullyConnected, 2).set_params([1.1, 2.2, 3.3, 4.4, 5.5, 6.6])
+    a.add_layer(LayerType.FullyConnected, 2)
     a.add_layer(LayerType.SquaredLoss, 2)
-    #a.initialize()
+    a.initialize()
     while True:
         cases = [
             ([0.0, 0.0], [1.0, 0.0]),
