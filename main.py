@@ -4,6 +4,8 @@ from ml import *
 
 # forward differentiation: O(N*inputs) # propagate from input # dual numbers
 # backward differentiation: O(N*outputs) # propagate from output
+# But you make (dx or dy) be a vector and take the derivative (with respect to/of) that.
+# Here we just take one backward derivative with respect to all parameters which is just O(N)
 # https://arxiv.org/pdf/1502.05767.pdf Table 3
 # https://www.youtube.com/watch?v=R_m4kanPy6Q
 
