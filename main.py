@@ -7,8 +7,6 @@ from ml import *
 # https://arxiv.org/pdf/1502.05767.pdf Table 3
 # https://www.youtube.com/watch?v=R_m4kanPy6Q
 
-# TODO: forward differentiation
-
 def print_duals():
     x1 = Dual(2, 0)
     x2 = Dual(5, 0)
