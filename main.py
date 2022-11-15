@@ -41,20 +41,24 @@ def print_backward_differentiation():
     a = NeuralNetwork()
     a.add_layer(LayerType.Input, 2)
     a.add_layer(LayerType.FullyConnected, 2)
+    a.add_layer(LayerType.LeakyReLU, 2)
+    a.add_layer(LayerType.FullyConnected, 2)
     a.add_layer(LayerType.SquaredLoss, 2)
     a.initialize()
+    i = 0
     while True:
         cases = [
             ([0.0, 0.0], [1.0, 0.0]),
             ([0.0, 1.0], [0.0, 1.0]),
             ([1.0, 0.0], [0.0, 1.0]),
-            #([1.0, 1.0], [1.0, 0.0]),
+            ([1.0, 1.0], [1.0, 0.0]),
         ]
-        for i in range(1000):
+        for j in range(2000):
             for input, output in cases:
                 a.train(input, output)
+                i += 1
             #print(a)
-        print("; ".join(str(a.forward(input)) for input, output in cases))
+        print(f"{i} " + "; ".join(str(a.forward(input)) for input, output in cases))
         #print(a)
         #sleep(.1)
 

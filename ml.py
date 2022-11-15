@@ -6,7 +6,9 @@ class LayerType(Enum):
     Input = 0
     FullyConnected = 1
     SquaredLoss = 2
-    # TODO: activation functions?
+    LeakyReLU = 3
+
+LEAKY_ReLU_K = 0.1
 
 class _Layer:
     prev_layer: Union["_Layer", None]
@@ -21,12 +23,13 @@ class _Layer:
         self.values = [0.0] * (size+1)
         self.values[-1] = 1.0
         self.value_adjoints = [0.0] * size
-        if type == LayerType.Input:
-            self.params = []
-        elif type == LayerType.FullyConnected:
+        self.params = []
+        if type == LayerType.FullyConnected:
             self.params = [0.0] * size * len(cast(_Layer, self.prev_layer).values)
         elif type == LayerType.SquaredLoss:
             self.params = [0.0] * size
+            assert_equals(size + 1, len(cast(_Layer, self.prev_layer).values))
+        elif type == LayerType.LeakyReLU:
             assert_equals(size + 1, len(cast(_Layer, self.prev_layer).values))
 
     def __repr__(self):
@@ -49,7 +52,6 @@ class _Layer:
 
     # dy/dp
     def get_param_adjoints(self):
-        # TODO: compute directly to avoid division by zero
         if self.type == LayerType.FullyConnected:
             acc = [0.0] * len(self.params)
             n = len(self.values) - 1
@@ -73,6 +75,11 @@ class _Layer:
         elif self.type == LayerType.SquaredLoss:
             prev_layer = cast(_Layer, self.prev_layer)
             self.set_values(prev_layer.values[:-1])
+        elif self.type == LayerType.LeakyReLU:
+            prev_layer = cast(_Layer, self.prev_layer)
+            for j in range(len(self.values) - 1):
+                prev_v = prev_layer.values[j]
+                self.values[j] = prev_v if (prev_v > 0) else prev_v * LEAKY_ReLU_K
 
     def backward(self):
         n = len(self.values) - 1
@@ -88,6 +95,11 @@ class _Layer:
             prev_layer._reset_adjoints()
             for i in range(n):
                 prev_layer.value_adjoints[i] += 2 * (self.values[i] - self.params[i]) * self.value_adjoints[i]
+        elif self.type == LayerType.LeakyReLU:
+            prev_layer = cast(_Layer, self.prev_layer)
+            prev_layer._reset_adjoints()
+            for i in range(n):
+                prev_layer.value_adjoints[i] = (1 if (self.values[i] > 0) else LEAKY_ReLU_K) * self.value_adjoints[i]
 
 class NeuralNetwork:
     layers: list[_Layer]
