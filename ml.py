@@ -126,6 +126,4 @@ class NeuralNetwork:
         self.backward(output)
         for layer in self.layers:
             for i, dp in enumerate(layer.get_param_adjoints()):
-                #print(layer.params[i], dp, dp / (abs(dp) + 1) * 1e-8)
-                layer.params[i] -= dp * 1e-3
-                #layer.params[i] -= dp / (abs(dp) + 1) * 1e-3
+                layer.params[i] -= dp * 1e-3 # TODO: divide by network.parameter_count
