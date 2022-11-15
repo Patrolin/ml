@@ -21,6 +21,10 @@ from ml import *
 #       df/dp = (v*(p+dp)-v*p)/dv = v*dp/dp = v
 #    d) L(v) = (v-Ev)^2
 #       dL/dv = ((v+dv-Ev)^2 - (v-Ev)^2) / dv = (dv^2 + 2(v - Ev)dv)/dv = dv + 2(v - Ev) = 2(v - Ev)
+#    e) LeakyReLU(v) = v if (v > 0) else k*v
+#       dLeakyReLU/dv = (f(v+dv) - f(v)) / dv =
+#        v > 0: dv/dv = 1
+#        v <= 0: kdv/dv = k
 # - O(N*outputs)
 #   You can make (dx or dy) be a vector and take the derivative (with respect to/of) that.
 #   Here we take one backward derivative with (dy = y) with respect to all parameters, which is just O(N).
@@ -41,9 +45,9 @@ def print_backward_differentiation():
     a = NeuralNetwork()
     a.add_layer(LayerType.Input, 2)
     a.add_layer(LayerType.FullyConnected, 2)
-    a.add_layer(LayerType.LeakyReLU, 2)
+    a.add_layer(LayerType.LeakyReLU)
     a.add_layer(LayerType.FullyConnected, 2)
-    a.add_layer(LayerType.SquaredLoss, 2)
+    a.add_layer(LayerType.SquaredLoss)
     a.initialize()
     i = 0
     while True:
@@ -53,7 +57,7 @@ def print_backward_differentiation():
             ([1.0, 0.0], [0.0, 1.0]),
             ([1.0, 1.0], [1.0, 0.0]),
         ]
-        for j in range(2000):
+        for j in range(1000):
             for input, output in cases:
                 a.train(input, output)
                 i += 1

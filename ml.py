@@ -1,6 +1,14 @@
 from random import random
-from typing import Union, cast
+from typing import Optional, TypeVar, Union, cast
 from qLib import assert_equals, Enum
+
+V = TypeVar("V")
+
+def as_not_null(value: Optional[V]) -> V:
+    if value == None:
+        raise AssertionError(f"got: {value}; expected: not {None}")
+    else:
+        return value
 
 class LayerType(Enum):
     Input = 0
@@ -17,20 +25,23 @@ class _Layer:
     value_adjoints: list[float] # dy/dv
     params: list[float]
 
-    def __init__(self, prev_layer: Union["_Layer", None], type: int, size: int):
+    def __init__(self, prev_layer: Union["_Layer", None], type: int, size: int | None = None):
         self.prev_layer = prev_layer
         self.type = type
+        self.params = []
+        if type == LayerType.FullyConnected:
+            self.params = [0.0] * as_not_null(size) * len(cast(_Layer, self.prev_layer).values)
+        elif type == LayerType.SquaredLoss:
+            assert_equals(size, None)
+            size = len(cast(_Layer, self.prev_layer).values) - 1
+            self.params = [0.0] * size
+        elif type == LayerType.LeakyReLU:
+            assert_equals(size, None)
+            size = len(cast(_Layer, self.prev_layer).values) - 1
+        size = as_not_null(size)
         self.values = [0.0] * (size+1)
         self.values[-1] = 1.0
         self.value_adjoints = [0.0] * size
-        self.params = []
-        if type == LayerType.FullyConnected:
-            self.params = [0.0] * size * len(cast(_Layer, self.prev_layer).values)
-        elif type == LayerType.SquaredLoss:
-            self.params = [0.0] * size
-            assert_equals(size + 1, len(cast(_Layer, self.prev_layer).values))
-        elif type == LayerType.LeakyReLU:
-            assert_equals(size + 1, len(cast(_Layer, self.prev_layer).values))
 
     def __repr__(self):
         def print_floats(floats: list[float]):
@@ -111,7 +122,7 @@ class NeuralNetwork:
         NEWLINE = "\n"
         return f"[{''.join(f'{NEWLINE}  {v}' for v in self.layers)}\n]"
 
-    def add_layer(self, type: int, size: int):
+    def add_layer(self, type: int, size: int | None = None):
         layer = _Layer(self.layers[-1] if self.layers else None, type, size)
         self.layers.append(layer)
         return layer
@@ -129,6 +140,7 @@ class NeuralNetwork:
             layer.backward()
 
     def initialize(self):
+        # TODO: initialize with high variance?
         for layer in self.layers:
             for i in range(len(layer.params)):
                 layer.params[i] = 2 * random() - 1
@@ -136,6 +148,8 @@ class NeuralNetwork:
     def train(self, input: list[float], output: list[float]):
         self.forward(input)
         self.backward(output)
+        param_count = sum(len(v.params) for v in self.layers)
         for layer in self.layers:
             for i, dp in enumerate(layer.get_param_adjoints()):
-                layer.params[i] -= dp * 1e-3 # TODO: divide by network.parameter_count
+                layer.params[i] -= dp / param_count
+        # TODO: partially reinitialize if stuck?

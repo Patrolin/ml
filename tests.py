@@ -4,7 +4,11 @@ from dual import Dual
 from ml import NeuralNetwork, LayerType
 
 def assert_close(got: float, expected: float, epsilon=1e-9, suffix=""):
-    if abs(got - expected) >= epsilon:
+    if abs(got - expected) > epsilon:
+        raise AssertionError(f"got: {got}; expected: close {expected}{f'; suffix: {suffix}' if suffix else ''}")
+
+def assert_not_close(got: float, expected: float, epsilon=1e-9, suffix=""):
+    if abs(got - expected) <= epsilon:
         raise AssertionError(f"got: {got}; expected: close {expected}{f'; suffix: {suffix}' if suffix else ''}")
 
 def check_function(f: Callable[[Dual], Dual], g: Callable[[float], float]):
@@ -39,10 +43,10 @@ def learn_linear_xor():
     a = NeuralNetwork()
     a.add_layer(LayerType.Input, 2)
     a.add_layer(LayerType.FullyConnected, 2)
-    a.add_layer(LayerType.SquaredLoss, 2)
+    a.add_layer(LayerType.SquaredLoss)
     a.initialize()
     # 3 samples
-    for i in range(50000):
+    for i in range(10000):
         for input, output in XOR_CASES[:3]:
             a.train(input, output)
     for input, output in XOR_CASES[:3]:
@@ -56,8 +60,8 @@ def learn_linear_xor():
             a.train(input, output)
     for input, output in XOR_CASES:
         zero, one = a.forward(input)
-        assert_close(zero, 0.5, 1e-1)
-        assert_close(one, 0.5, 1e-1)
+        assert_not_close(zero, output[0], 1e-1)
+        assert_not_close(one, output[1], 1e-1)
 
 @test
 def learn_xor():
@@ -65,12 +69,12 @@ def learn_xor():
     a = NeuralNetwork()
     a.add_layer(LayerType.Input, 2)
     a.add_layer(LayerType.FullyConnected, 2)
-    a.add_layer(LayerType.LeakyReLU, 2)
+    a.add_layer(LayerType.LeakyReLU)
     a.add_layer(LayerType.FullyConnected, 2)
-    a.add_layer(LayerType.SquaredLoss, 2)
+    a.add_layer(LayerType.SquaredLoss)
     # 4 samples
     a.initialize()
-    for i in range(250000):
+    for i in range(10000):
         for input, output in XOR_CASES:
             a.train(input, output)
     error_suffix = ""
