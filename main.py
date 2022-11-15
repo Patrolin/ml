@@ -2,14 +2,30 @@ from time import sleep
 from dual import Dual
 from ml import *
 
-# forward differentiation: O(N*inputs) # propagate from input # dual numbers
-# backward differentiation: O(N*outputs) # propagate from output
-# But you make (dx or dy) be a vector and take the derivative (with respect to/of) that.
-# Here we just take one backward derivative with respect to all parameters which is just O(N)
-# https://arxiv.org/pdf/1502.05767.pdf Table 3
-# https://www.youtube.com/watch?v=R_m4kanPy6Q
+# forward differentiation:
+# - propagate from input
+# - compute dv/dx for every v
+# - implemented using dual numbers
+# - O(N*inputs)
+# backward differentiation:
+# - propagate from output
+# - compute dy/dv for every v
+# - implemented using chain rule starting with dy/dy = 1
+#   We can compute dy/dp as (dy/dv) * (dv/dp) where dv/dp is (f(p+dp)-f(p))/dp,
+#   for example:
+#    a) f(v) = v+w
+#       df/dv = (v+dv+w - (v+w))/dv = dv/dv = 1
+#    b) f(v) = v*p
+#       df/dv = ((v+dv)*p-v*p)/dv = p*dp/dp = p
+#    c) f(p) = v*p
+#       df/dp = (v*(p+dp)-v*p)/dv = v*dp/dp = v
+#    d) L(v) = (v-Ev)^2
+#       dL/dv = ((v+dv-Ev)^2 - (v-Ev)^2) / dv = (dv^2 + 2(v - Ev)dv)/dv = dv + 2(v - Ev) = 2(v - Ev)
+# - O(N*outputs)
+#   You can make (dx or dy) be a vector and take the derivative (with respect to/of) that.
+#   Here we take one backward derivative with (dy = y) with respect to all parameters, which is just O(N).
 
-def print_duals():
+def print_forward_differentiation():
     x1 = Dual(2, 1) # set nonzero dx for the direction in which to take the derivative
     x2 = Dual(5, 0)
     print(f"{x1}; {x2}")
@@ -43,5 +59,5 @@ def print_backward_differentiation():
         #sleep(.1)
 
 if __name__ == "__main__":
-    #print_duals()
+    #print_forward_differentiation()
     print_backward_differentiation()
